@@ -1,0 +1,329 @@
+---
+title: "30 días de gráficos"
+author: "David Echeverría Villafuerte | @dhecheverria | dhecheverria@gmail.com"
+date: "10/10/2020"
+output: rmdformats::readthedown
+ 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE} 
+    # add this chunk to end of mycode.rmd 
+    file.rename(from="scripts/mycode.md", 
+       to="README.md") 
+``` 
+
+
+# Introducción
+
+En esta entrada compartiré los códigos y resultados del reto [\#30díasdegráficos](https://twitter.com/hashtag/30d%C3%ADasdegr%C3%A1ficos?src=hashtag_click) con R organizado por [R para Ciencia de Datos](https://github.com/cienciadedatos/datos-de-miercoles/blob/master/30-dias-de-graficos-2020.md) que tuvo lugar desde el 2 de mayo de 2020. Esta iniciativa de la comunidad hispanohablante de R fue en conmeración de [Florence Nightingale](https://es.wikipedia.org/wiki/Florence_Nightingale). Los gráficos los desarrollé con [Ramiro Villarruel](https://twitter.com/ramirovillamey), bajo la cuenta de la [Soluciones Analíticas y Económicas](https://twitter.com/SEYA_Ecu), con quienes colaboro.Sin embargo, he realizado una serie de actualizaciones y aportes con respecto a las publicaciones originales.
+
+La comunidad de usuarios que participó en este reto fue espectacular, me permito sugerir que visiten las también páginas de estos usuarios:
+
+-   [Adriana Angulo](https://github.com/AnguloB/datosdemiercoles/tree/master/00_30diasDeGraficos)
+
+-   [Guillem Salazar](https://github.com/GuillemSalazar/desafio_30_dias_de_graficos)
+
+-   [Violeta](https://twitter.com/violetrzn)
+
+-   [Daniel Redondo](https://github.com/danielredondo/30diasdegraficos)
+
+-   [Picando Números](https://github.com/picanum/DatosDeMiercoles/tree/master/30-dias-de-graficos)
+
+Esto hace parte fundamental de un curso de visualización de datos con R que he desarrollado bajo el enfoque de la gramática de gráficos de ggplot.
+
+El repositorio de los datos y fuentes usadas los puede encontrar en mi repositorio de Github [Reto 30 días de gráficos en R](https://github.com/davidecheverria/Reto_30_dias_de_graficos_R/tree/main/Bases_de_datos). Allí he puesto en consideración también los vínculos de las fuentes.
+
+Metodológicamente me parece interesante, desde mi experiencia, usar llamar a los paquetes en los procesos pertinentes y no cargarlos todos al inicio, con la finalidad de que los lectores puedan identificar su uso y funciones.
+
+# 1 Gráfico de barras: Top 20 premios nobel por país hasta el 2019
+
+## 1.1 Libererías
+
+```{r,message=FALSE,warning=FALSE}
+
+
+
+
+```
+
+## 1.1 Creación de la base de datos
+
+Esta base de datos se construyó con base en la información de [Wikipedia[](https://es.wikipedia.org/wiki/Premio_Nobel) y para su reproducibilidad se la pone a disposición.
+
+```{r}
+Pais <- c("Estados Unidos","Reino Unido","Francia","Canadá","Noruega","Alemania","India","Países Bajos","Suecia","Austria","Chipre","Finlandia","Israel","Italia","Polonia","Rusia","Unión Soviética","Estados Unidos","Alemania","Reino Unido","Francia","Rusia","Países Bajos","Japón","Suiza","Suecia","Italia","Dinamarca","Austria","Canadá","Taiwán","China","Bélgica","Hungría","India","Irlanda","Pakistán","Polonia","Estados Unidos","Alemania","Reino Unido","Francia","Suiza","Japón","Israel","Canadá","Suecia","Países Bajos","Polonia","India","Argentina","Bélgica","Dinamarca","Finlandia","Italia","Nueva Zelanda","Noruega","Austria","Unión Soviética","México","Hungría","Checoslovaquia","Australia","Egipto","Turquía","Estados Unidos","Reino Unido","Alemania","Francia","Suecia","Suiza","Australia","Dinamarca","Austria","Bélgica","Japón","Italia","Argentina","Rusia","Canadá","España","Países Bajos","Noruega","China","Portugal","Venezuela","Sudáfrica","Hungría","India","Irlanda","Luxemburgo","Nueva Zelanda","Polonia","Francia","Estados Unidos","Alemania","Reino Unido","Suecia","Italia","España","Unión Soviética","Irlanda","Polonia","Dinamarca","Noruega","Chile","Grecia","Japón","Sudáfrica","Suiza","Perú","Austria","Bélgica","Bielorrusia","Canadá","Checoslovaquia","China","Colombia","Egipto","Finlandia","Guatemala","Hungría","India","Islandia","Israel","México","Nigeria","Australia","Portugal","Rumania","Santa Lucía","Turquía","Yugoslavia","Estados Unidos","Reino Unido","Francia","Suecia","Alemania","Sudáfrica","Bélgica","Suiza","Israel","Austria","Canadá","Unión Soviética","Argentina","Bangladés","Liberia","Egipto","Timor Oriental","Noruega","India","Países Bajos","Etiopía","Japón","Guatemala","Italia","México","Dinamarca","Kenia","Costa Rica","Vietnam nota 4","Irlanda","Birmania (o Myanmar)","Palestina","Corea del Sur","Ghana","Irán","Yemen","China","Polonia","Finlandia","Pakistán","Rumania","Tíbet","Túnez","Colombia","Irak","República Democrática del Congo","Naciones Unidas u otras Organizaciones Internacionales")
+
+Numero <- c(48,9,4,3,3,2,2,2,2,1,1,1,1,1,1,1,1,88,25,23,12,10,9,8,6,4,4,3,3,3,2,2,1,1,1,1,1,1,65,31,27,7,7,7,4,4,4,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,96,30,16,10,8,6,6,5,5,4,4,3,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,15,12,10,8,7,6,5,5,4,5,3,3,2,2,2,2,2,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,20,12,9,5,4,4,3,3,3,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,23)
+
+Disciplina <- c("Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Economía","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Física","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Química","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Fisiología o Medicina","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Literatura","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz","Paz")
+    
+premios.nobel <- data.frame(Pais,Numero,Disciplina)
+```
+
+## 1.1 Procesammiento de la base de datos
+
+```{r}
+library(tidyverse)
+#Cambio de formado long a wide
+premios.nobel2 <- spread(data = premios.nobel, key = Disciplina, value = Numero) 
+
+#Remplazo de los valores perdidos NA por 0 (Esto se hace para generar la columna de totales)
+premios.nobel2[is.na(premios.nobel2)] = 0
+
+#Columna de totales
+premios.nobel2$Total <- apply(premios.nobel2[,2:7],1,sum)
+
+#Eliminación de la fila que corresponde a 
+#Naciones Unidas u otras Organizaciones Internacionales
+
+premios.nobel3<- premios.nobel2[-40,]
+
+
+#Creación de un subconjunto de datos con el top 20 de países
+premios.nobel4 <-  subset(premios.nobel3,premios.nobel3$Total>8)
+```
+
+
+## 1.2 Creación de gráfico barras
+
+```{r}
+library(ggplot2)
+library(ggdark)
+p<-ggplot(premios.nobel4, aes(x= reorder (Pais, Total), y=Total, fill=Pais,label=Total)) +
+      geom_bar(stat="identity") +labs(title = "Top 20 países con más Premios Nobel hasta el 2019",
+      caption="Fuente: Wikipedia \nElaboración: @dhecheverria \nNota: Incluye el Premio de Ciencias Económicas \n del Banco de Suecia en Memoria de Alfred Nobel ",y="Número de galardonados",x="")+
+      dark_theme_gray()+
+      theme(legend.position="none",axis.text.x = element_text(angle = 90, hjust = 1))+
+      coord_flip()+
+      geom_text(data=premios.nobel4, 
+                aes(Pais, Total, label=Total), 
+                position = position_stack(vjust =1),
+                size=4)
+p  
+```
+
+
+## 1.3 Gráfico animado
+
+Primera opción de animación 
+
+```{r}
+library(gganimate)
+p+transition_states(Total, wrap = FALSE) + shadow_mark()
+```
+
+Segunda opción de animación
+
+```{r}
+library(gganimate)
+p + transition_states(
+  Total,
+  transition_length = 5,
+  state_length = 1) +
+  enter_fade() +
+  exit_shrink() +
+  ease_aes('sine-in-out')
+```
+
+# 2 Gráfico de líneas: Crecimiento del PIB real del Ecuador 1966 - 2019
+
+## 2.1 Libererías
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(ggdark)
+library(gganimate)
+```
+
+## 2.2 Creación de la base de datos
+
+
+
+```{r}
+Fecha<- seq(as.Date("1966-12-31"), as.Date("2019-12-31"), by = "years")
+
+Tasa.pib<-c(-0.339525639357718,4.62107394070437,1.90943839921289,
+  4.66923798032512,6.87192932986009,6.29260619628322,
+  5.01764070360242,13.9506821321825,11.2085096276477,
+  10.9721540015733,7.39718761930672,1.60484211178153,
+  5.70682494457921,3.73404840122311,3.70868296886218,
+  5.61286411959032,0.614845353647886,-0.336868770986332,
+  2.62527326828874,3.93500141151872,3.46478251583862,
+  -0.259098708350403,5.8904672900016,1.00577794619832,
+  3.67991405278418,4.29134239802096,2.11431067512799,
+  1.97321807875184,4.25825046821247,2.25254877423715,
+  1.7,4.3,3.26652940374665,-4.73938579085588,1.0918015643576,
+  4.01562989958493,4.09677665885357,2.72287733695473,
+  8.21102091734038,5.29130826699402,4.40352643383186,
+  2.19006397224539,6.35713059990832,0.566491592100093,
+  3.52529866894027,7.86814091910997,5.64196206671199,
+  4.94651126690626,3.78886854920835,0.0988726083462677,
+  -1.22638398463879,2.36838652633651,1.28929193290501,0.0537188288209922)
+
+
+crecimiento.econ<- data.frame(Fecha,Tasa.pib)
+
+ultimo<- tail(crecimiento.econ[,2], n=1)
+ultimo
+```
+
+## 2.3 Creación de gráfico de líneas
+
+```{r,message=FALSE,warning=FALSE}
+p2 <- ggplot(
+  crecimiento.econ,
+  aes(Fecha, Tasa.pib)
+   ) +
+  geom_line(colour="#DCDCDC") +
+  labs(x = "Años", y = "% Variación anual") +
+  dark_theme_gray()+
+  labs(title = "Tasa de variación anual del Pib real (2007=100) del Ecuador",
+       subtitle="Periodo 1966-2019",
+       caption="Fuente: Banco Central del Ecuador \nElaboración: @dhecheverria | @ramirovillamey ",
+       x = "Años", y = "Variación anual")+
+  scale_y_continuous(sec.axis = sec_axis(~ ., breaks = ultimo))
+p2
+```
+
+## 2.4 Gráfico animado versión 
+
+Primera opción
+
+```{r}
+p2+geom_point(aes(group = seq_along(Fecha)), colour="#FF8C00", size=1.5)+
+  transition_reveal(Fecha)
+```
+
+Segunda opción
+
+
+```{r}
+p2+geom_point(aes(group = seq_along(Fecha)), colour="#FF8C00", size=1.5)+
+  transition_reveal(Fecha)+
+  view_follow()
+```
+
+# 3 Gráfico de burbujas: Tasa de fallecidos por COVID e Índice de desarrollo Humano
+
+## 3.1 Base de datos 
+
+Para este gráfico se requirió procesar la información, lo cual permitirá observa el uso de varios paquetes. Siempre es posible optimizar los códigos pero la idea es mostrar paso a paso el procesamiento para quienes estén iniciando con R.
+
+### 3.1.1 Base de los fallecidos por COVID-19 de la [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)
+
+```{r,message=FALSE,warning=FALSE}
+library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
+
+covid<-paste("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",sep="")  
+
+covid.world<- read_csv(covid)
+
+death.world<- aggregate(covid.world$`10/27/20`, by=list(Category=covid.world$`Country/Region`), FUN=sum)
+
+colnames(death.world)<- c("Country","Fallecidos")
+
+#Cambiar US por United States (esto se hace para poder hacer los merge con las otras bases)
+
+death.world[181,1] <- "United States"
+
+head(death.world)
+```
+
+### 3.1.2 Importar la base de datos del índice de desarrollo humano
+
+```{r,message=FALSE,warning=FALSE}
+library(readr) 
+idh<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/idh_2018.csv",sep="")  
+idh_90_18<- read_csv(idh)
+idh_2018 <- idh_90_18[,c(2,31)]
+colnames(idh_2018) <- c("Country","idh_2018")
+tail(idh_2018)
+```
+
+### 3.1.3 Población mundial 2019 y grupo de países por nivel de ingreso (Banco Mundial)
+
+```{r}
+#Indicadores completos del Banco Mundial
+library(WDI) #Esta liberaría permite obtener la información del Banco mundial
+new_wdi_cache <- WDIcache() 
+indicadores <- new_wdi_cache$series
+
+#Población y grupo de ingreso 2019
+
+wdi_dat <- WDI(indicator = "SP.POP.TOTL", start = 2019, end = 2019, extra = TRUE) 
+poblacion2019 <- wdi_dat[,c(2,3,10)] #Selección de columnas de interés
+colnames(poblacion2019) <- c("Country","poblacion_2019","Grupo_ingresos")
+head(poblacion2019)
+```
+
+### 3.1.4 Proyección de la población mundial (The Population Division of the Department of Economic and Social Affairs, United Nations)
+
+```{r}
+poblacion <- paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/World_population_2020.csv",sep = "")
+poblacion50_20<- read.csv(poblacion)
+poblacion2020 <- poblacion50_20[,c(3,78)]
+colnames(poblacion2020) <- c("Country","poblacion_2020")
+head(poblacion2020)
+```
+
+Para este ejemplo no se realizó una homologación de los nombres de los países es por eso que se pasa de 189 observaciones a 152 observaciones. Cuando se usan bases de diferentes fuentes al hacer las uniones los países que tienen diferencias en los nombres no se eliminan. Se sugiere que en las investigaciones o trabajos profesionales se usen códigos para realizar las uniones de las bases de datos.
+
+```{r,message=FALSE,warning=FALSE}
+base.covid <- merge(death.world,poblacion2020,by = "Country")
+base.covid <- merge(base.covid,idh_2018,by = "Country")
+base.covid <- merge(base.covid,poblacion2019,by = "Country")
+base.covid$tasa2020 <- (base.covid$Fallecidos/base.covid$poblacion_2020)*1000 #la población del 2020 está en miles
+base.covid$tasa2019 <- (base.covid$Fallecidos/base.covid$poblacion_2019)*1000000
+str(base.covid)
+head(base.covid)
+```
+
+Top 50 países
+
+```{r}
+library(dplyr)
+base.covid50 <-
+base.covid %>%
+  arrange_(~ desc(tasa2020)) %>%
+  head(n = 50)
+```
+
+
+## 3.2 Gráfico de burbujas
+
+```{r,fig.height=10,fig.width=10}
+library(ggrepel) #Esta librería permite que las etiquetas no se traslapen
+library(ggplot2)
+ggplot(base.covid50,aes(x=idh_2018, y= tasa2020, size = poblacion_2020,colour=Grupo_ingresos)) +
+  geom_point(alpha=0.4) +
+  scale_size(range = c(.1, 24), name="Población")+
+  geom_text_repel(
+    mapping = aes(x=idh_2018, y=tasa2020,label=Country),
+    size = 4, #Tamaño de la etiqueta
+    segment.size = .25, #Tamaño de la línea
+    segment.alpha = 1.5, #transparencia de la línea
+    force = 10,
+    arrow = arrow(length = unit(0.015, "npc"), type = "closed", ends = "first"))+ #Configuración de las flechas
+ labs(
+    title = "Top 50 países con mayor tasa de fallecidos por COVID por millón de habitantes (al 27/10/20)\n vs Índice de Desarrollo Humano (2018)",
+    caption = "Fuente: UN | PNUD | Johns Hopkins University\n Elaboración: @dhecheverria | @ramirovillamey",
+    x="Índice de Desarrollo Humano",y="Tasa de fallecidos por millón habitantes")+
+ guides(color=guide_legend(title="Grupo de países por ingreso"))+ # Permite cambiar el nombre de las burbujas
+ scale_color_manual(values = c("#F8766D", "#00BFC4", "#7CAE00"), # Colores por default de ggplot
+                      labels = c("Ingreso alto",
+                                 "Ingreso medio alto",
+                                 "Ingreso medio bajo")) # Permite cambiar el título y el nombre de los valores de los grupos,
+                                                        # lo que permite evitar hacer un procesamiento a la base
+  
+```
+
+Intente replicar este gráfico con la población del 2019 y las tasas de fallecidos por COVID-19 de ese año (tasa2019).
+
+
+
+
