@@ -41,15 +41,6 @@ Metodológicamente me parece interesante, desde mi experiencia, usar llamar a lo
 
 # 1 Gráfico de barras: Top 20 premios nobel por país hasta el 2019
 
-## 1.1 Libererías
-
-```{r,message=FALSE,warning=FALSE}
-
-
-
-
-```
-
 ## 1.1 Creación de la base de datos
 
 Esta base de datos se construyó con base en la información de [Wikipedia[](https://es.wikipedia.org/wiki/Premio_Nobel) y para su reproducibilidad se la pone a disposición.
@@ -84,26 +75,27 @@ premios.nobel3<- premios.nobel2[-40,]
 
 
 #Creación de un subconjunto de datos con el top 20 de países
-premios.nobel4 <-  subset(premios.nobel3,premios.nobel3$Total>8)
+premios.nobel4 <-  subset(premios.nobel3,premios.nobel3$Total>=8)
 ```
 
 
 ## 1.2 Creación de gráfico barras
 
-```{r}
+```{r,fig.height=5}
 library(ggplot2)
 library(ggdark)
-p<-ggplot(premios.nobel4, aes(x= reorder (Pais, Total), y=Total, fill=Pais,label=Total)) +
-      geom_bar(stat="identity") +labs(title = "Top 20 países con más Premios Nobel hasta el 2019",
-      caption="Fuente: Wikipedia \nElaboración: @dhecheverria \nNota: Incluye el Premio de Ciencias Económicas \n del Banco de Suecia en Memoria de Alfred Nobel ",y="Número de galardonados",x="")+
+g<-ggplot(premios.nobel4, aes(x= reorder (Pais, Total), y=Total, fill=Pais,label=Total)) +
+      geom_bar(stat="identity") +
+  labs(title = "Top 20 países con más Premios Nobel hasta el 2019",
+      caption="Fuente: Wikipedia\nElaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey\nNota: Incluye el Premio de Ciencias Económicas \n del Banco de Suecia en Memoria de Alfred Nobel ",y="Número de galardonados",x="")+
       dark_theme_gray()+
       theme(legend.position="none",axis.text.x = element_text(angle = 90, hjust = 1))+
       coord_flip()+
       geom_text(data=premios.nobel4, 
                 aes(Pais, Total, label=Total), 
-                position = position_stack(vjust =1),
+                position = position_stack(vjust =1.06),
                 size=4)
-p  
+g  
 ```
 
 
@@ -131,18 +123,9 @@ p + transition_states(
 
 # 2 Gráfico de líneas: Crecimiento del PIB real del Ecuador 1966 - 2019
 
-## 2.1 Libererías
+## 2.1 Creación de la base de datos
 
-```{r,message=FALSE,warning=FALSE}
-library(ggplot2)
-library(tidyverse)
-library(ggdark)
-library(gganimate)
-```
-
-## 2.2 Creación de la base de datos
-
-
+La fuente de esta información es el [Banco Central del Ecuador](https://contenido.bce.fin.ec/documentos/Administracion/bi_menuCNAde_f.html#)
 
 ```{r}
 Fecha<- seq(as.Date("1966-12-31"), as.Date("2019-12-31"), by = "years")
@@ -172,9 +155,11 @@ ultimo<- tail(crecimiento.econ[,2], n=1)
 ultimo
 ```
 
-## 2.3 Creación de gráfico de líneas
+## 2.2 Creación de gráfico de líneas
 
 ```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+library(ggdark)
 p2 <- ggplot(
   crecimiento.econ,
   aes(Fecha, Tasa.pib)
@@ -184,7 +169,7 @@ p2 <- ggplot(
   dark_theme_gray()+
   labs(title = "Tasa de variación anual del Pib real (2007=100) del Ecuador",
        subtitle="Periodo 1966-2019",
-       caption="Fuente: Banco Central del Ecuador \nElaboración: @dhecheverria | @ramirovillamey ",
+       caption="Fuente: Banco Central del Ecuador \nElaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey ",
        x = "Años", y = "Variación anual")+
   scale_y_continuous(sec.axis = sec_axis(~ ., breaks = ultimo))
 p2
@@ -195,6 +180,7 @@ p2
 Primera opción
 
 ```{r}
+library(gganimate)
 p2+geom_point(aes(group = seq_along(Fecha)), colour="#FF8C00", size=1.5)+
   transition_reveal(Fecha)
 ```
@@ -203,6 +189,7 @@ Segunda opción
 
 
 ```{r}
+library(gganimate)
 p2+geom_point(aes(group = seq_along(Fecha)), colour="#FF8C00", size=1.5)+
   transition_reveal(Fecha)+
   view_follow()
@@ -296,10 +283,13 @@ base.covid %>%
 
 ## 3.2 Gráfico de burbujas
 
+Para la configuración de los colores se ha usado los códigos Hex. En la página [htlmcolorcodes](https://htmlcolorcodes.com/es/) se puede encontrar códigos de color Hex, RGB y HSL. Se recomienda usarla.
+
 ```{r,fig.height=10,fig.width=10}
 library(ggrepel) #Esta librería permite que las etiquetas no se traslapen
 library(ggplot2)
-ggplot(base.covid50,aes(x=idh_2018, y= tasa2020, size = poblacion_2020,colour=Grupo_ingresos)) +
+
+g3 <- ggplot(base.covid50,aes(x=idh_2018, y= tasa2020, size = poblacion_2020,colour=Grupo_ingresos)) +
   geom_point(alpha=0.4) +
   scale_size(range = c(.1, 24), name="Población")+
   geom_text_repel(
@@ -311,7 +301,7 @@ ggplot(base.covid50,aes(x=idh_2018, y= tasa2020, size = poblacion_2020,colour=Gr
     arrow = arrow(length = unit(0.015, "npc"), type = "closed", ends = "first"))+ #Configuración de las flechas
  labs(
     title = "Top 50 países con mayor tasa de fallecidos por COVID por millón de habitantes (al 27/10/20)\n vs Índice de Desarrollo Humano (2018)",
-    caption = "Fuente: UN | PNUD | Johns Hopkins University\n Elaboración: @dhecheverria | @ramirovillamey",
+    caption = "Fuente: UN | PNUD | Johns Hopkins University\n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey",
     x="Índice de Desarrollo Humano",y="Tasa de fallecidos por millón habitantes")+
  guides(color=guide_legend(title="Grupo de países por ingreso"))+ # Permite cambiar el nombre de las burbujas
  scale_color_manual(values = c("#F8766D", "#00BFC4", "#7CAE00"), # Colores por default de ggplot
@@ -319,11 +309,304 @@ ggplot(base.covid50,aes(x=idh_2018, y= tasa2020, size = poblacion_2020,colour=Gr
                                  "Ingreso medio alto",
                                  "Ingreso medio bajo")) # Permite cambiar el título y el nombre de los valores de los grupos,
                                                         # lo que permite evitar hacer un procesamiento a la base
-  
+g3  
 ```
 
 Intente replicar este gráfico con la población del 2019 y las tasas de fallecidos por COVID-19 de ese año (tasa2019).
 
+
+# 4 Gráficos con facetas: Tasa de crecimiento anual del PIB total anual por habitante \na precios constantes en dólares 1991 - 2018
+
+## 4.1 Base de datos 
+
+La fuente de la información usada es la [CEPAL](https://cepalstat-prod.cepal.org/cepalstat/tabulador/ConsultaIntegrada.asp?idIndicador=2207&idioma=e)
+
+```{r,message=FALSE,warning=FALSE}
+library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
+
+crecimiento<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/America_Latina_crecimiento.csv",sep="") 
+
+crecimiento_la<- read.csv(crecimiento)
+
+
+library(reshape) #Para configurar la base en formato long
+crecimiento2 <- melt(crecimiento_la,id="País")
+```
+
+## 4.2 Procesamiento de la base (Configuración y uso de fechas)
+
+
+```{r}
+#Configuración de las fechas
+inicio="1991-12-31"
+i = as.Date(inicio, "%Y-%m-%d")
+Anio<-seq.Date(as.Date(inicio), length.out = 28, by = "years")
+Anio<- rep(Anio,each=27)
+crecimiento2$variable  <- Anio
+colnames(crecimiento2) <- c("Pais","Año","Crecimiento")
+
+#Formato del crecimiento del PIB
+crecimiento2$Crecimiento<- round(crecimiento2$Crecimiento*100,2)
+```
+
+## 4.4 Gráfico de líneas con facetas
+
+```{r,message=FALSE,warning=FALSE,fig.width=12}
+library(ggplot2)
+library(ggdark)
+g4 <- ggplot(data=crecimiento2, aes(x=Año, y=Crecimiento,group=Pais)) +
+     geom_line(aes(color=Pais))+
+    labs(title= "Tasa de crecimiento anual del PIB total anual por habitante \na precios constantes en dólares",
+         subtitle = "Período 1991-2018",
+         caption = "Fuente: Cepalstat\n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey",
+         x="",y="Tasa de crecimiento anual (t/t-1)")+
+     geom_smooth()+
+     facet_wrap(~Pais, scales = "free")+
+     dark_mode()+
+     theme(axis.text.x = element_text(angle = 90, hjust = 1,size=6),legend.position = "none")
+g4
+```
+
+
+```{r,message=FALSE,warning=FALSE,fig.width=12}
+library(gganimate)
+ggplot(data=crecimiento2, aes(x=Año, y=Crecimiento,group=Pais)) +
+    geom_line(aes(color=Pais))+
+    labs(title= "Tasa de crecimiento anual del PIB total anual por habitante \na precios constantes en dólares",
+         subtitle = "Período 1991-2018",
+         caption = "Fuente: Cepalstat\n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey",
+         x="",y="Tasa de crecimiento anual (t/t-1)")+
+     facet_wrap(~Pais, scales = "free")+
+     dark_mode()+
+     theme(axis.text.x = element_text(angle = 90, hjust = 1,size=6),legend.position = "none")+
+     transition_reveal(crecimiento2$Año)
+```
+
+# 5 Diagramas de arco: Trata de personas, víctimas detectadas por ciudadanía - 2017
+
+## 5.1 Base de datos 
+
+La fuente de la información usada es la [UNODC](https://dataunodc.un.org/data/TIP/Detected%20victims%20by%20citizenship)
+
+```{r}
+
+library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
+
+victimas<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/victimas2017.csv",sep="") 
+
+victimas2017<- read.csv(victimas)
+
+```
+
+## 5.2 Procesamiento de la información
+
+Para este tipo de gráficos es importante que la información esté en formato matricial.
+
+```{r}
+#Matriz origen destino
+victimas2017.m <- matrix(c(victimas2017$destinantion,victimas2017$origin),nrow = 200)
+
+
+#Vector del número de víctimas
+numero.victimas <- victimas2017$X2017
+
+#Vector de la proporción del número de víctimas con respecto al total
+
+proporcion.victimas <- sapply(numero.victimas,function(x){x/sum(numero.victimas)})
+
+```
+
+
+## 5.3 Diagrama de arco
+
+```{r,message=FALSE,warning=FALSE,fig.width=15}
+arcplot(victimas2017.m,sorted = T,
+        col.nodes = "black",
+        lwd.arcs = proporcion.victimas*100, #Ancho de línea para dibujar símbolos de nodo
+        horizontal = T, #Posición del gráfico. Se sugiere que sea horizontal cuando hay muchos datos
+        col.arcs=hsv(runif(9,0.5,0.9),alpha=0.5)) #Se genera colores a través de una distribución normal
+```
+
+
+# 6 Gráficos de donut: Proporción de la población del Ecuador por grupos de edad 2010 - 2020
+
+## 6.1 Base de datos
+
+La fuente de información son las [Proyecciones de población a nivel nacional y provincial, por sexo, grupos de edad y área urbano-rural: 2010-2020](https://docs.google.com/viewer?url=http%3A%2F%2Fapp.sni.gob.ec%2Fsni-link%2Fsni%2FPortal%2520SNI%25202014%2FESTADISTICA%2FProyecciones_y_estudios_demograficos%2FProyecciones%25202010%2F7_Proyeccion_Provincial_Urbano_Rural_Grupos_Edades_Sexo_2010_2020.xlsx) del Sistema Nacional de Información del Ecuador.
+
+```{r}
+
+library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
+
+edades<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/Proporcion_poblacion_edades_Ecuador.csv",sep="") 
+
+edades.ec<- read.csv(edades)
+
+```
+
+## 6.2 Procesamiento de la información
+
+```{r,message=FALSE,warning=FALSE}
+library(reshape) #Para formato long
+edades2010_2020 <- melt(edades.ec,id=c("Edades","Area"))
+
+# Arreglar de la columna que contiene los años. Cuando se importa de Github se escribe con una X los años no están en formato de texto.
+
+edades2010_2020$variable <- rep(2010:2020,each=9)
+
+# Creación de etiquetas
+
+edades2010_2020$etiqueta <- paste0(round(edades2010_2020$value,2)*100, "%")
+
+```
+
+
+## 6.3 Gráfico de donut
+
+**ggdonutchart** es una función que hace parte del paquete **ggpubr** y sigue la misma metodología de la gramática de gráficos. Fíjese que para el argumento de *data* se puede filtrar directamente lo que se requiere, evitando así crear varios subconjunto de datos.
+
+Adicionalmente note que se ha usado los código Hex para los colores.
+
+
+```{r}
+library(ggpubr)
+
+g6.1 <- ggdonutchart(subset(edades2010_2020,edades2010_2020$variable==2010 & edades2010_2020$Area=="Nacional"), "value", label ="etiqueta",
+                  fill = "Edades", color = "white",
+                  palette = c("#F9E79F", "#ff8533", "#AED6F1"),
+                  lab.font = c(2, "italic", "black"))+
+  labs(title="Ecuador, nacional 2010")+
+  theme(text = element_text(size=8))
+
+g6.1
+```
+
+
+En este código se ha hecho 6 donuts comparando las proporciones de población por edad del 2010 y 2020 por edad, además se hará uso del paquete **patchwork** que permite configurar la impresión de varios gráficos.
+
+
+
+```{r,fig.width=13}
+library(ggpubr)
+library(patchwork)
+
+g6.2 <- ggdonutchart(subset(edades2010_2020,edades2010_2020$variable==2010 & edades2010_2020$Area=="Urbano"), "value", label ="etiqueta",
+                  fill = "Edades", color = "white",
+                  palette = c("#F9E79F", "#ff8533", "#AED6F1"),
+                  lab.font = c(2, "italic", "black"))+
+  labs(title="Ecuador, urbano 2010")+
+  theme(text = element_text(size=8))
+
+
+g6.3 <- ggdonutchart(subset(edades2010_2020,edades2010_2020$variable==2010 & edades2010_2020$Area=="Rural"), "value", label ="etiqueta",
+                  fill = "Edades", color = "white",
+                  palette = c("#F9E79F", "#ff8533", "#AED6F1"),
+                  lab.font = c(2, "italic", "black"))+
+  labs(title="Ecuador, rural 2010")+
+  theme(text = element_text(size=8))
+
+
+g6.4 <- ggdonutchart(subset(edades2010_2020,edades2010_2020$variable==2020 & edades2010_2020$Area=="Nacional"), "value", label ="etiqueta",
+                  fill = "Edades", color = "white",
+                  palette = c("#F9E79F", "#ff8533", "#AED6F1"),
+                  lab.font = c(2, "italic", "black"))+
+  labs(title="Ecuador, nacional 2020")+
+  theme(text = element_text(size=8))
+
+g6.5 <- ggdonutchart(subset(edades2010_2020,edades2010_2020$variable==2020 & edades2010_2020$Area=="Urbano"), "value", label ="etiqueta",
+                  fill = "Edades", color = "white",
+                  palette = c("#F9E79F", "#ff8533", "#AED6F1"),
+                  lab.font = c(2, "italic", "black"))+
+  labs(title="Ecuador, urbano 2020")+
+  theme(text = element_text(size=8))
+
+g6.6 <- ggdonutchart(subset(edades2010_2020,edades2010_2020$variable==2020 & edades2010_2020$Area=="Rural"), "value", label ="etiqueta",
+                  fill = "Edades", color = "white",
+                  palette = c("#F9E79F", "#ff8533", "#AED6F1"),
+                  lab.font = c(2, "italic", "black"))+
+  labs(title="Ecuador, rural 2020",
+  caption="Fuente: Proyecciones poblacionales 2010 -2020 a mitad de año (Inec)\nElaboración: @SEYA_Ecu | @dhecheverria |@ramirovillamey")+
+  theme(text = element_text(size=8))
+
+(g6.1+g6.2+g6.3)/(g6.4+g6.5+g6.6)
+
+
+
+```
+
+# 7 Gráficos ridgeline: Inflación anual del Ecuador 2000 - 2020
+
+## 7.1 Base de datos
+
+La fuente de información es el [Instituto Nacional de Estadísica y Censo](https://www.ecuadorencifras.gob.ec/indice-de-precios-al-consumidor/)
+
+```{r}
+
+library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
+
+inflacion<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/Inflacion_anual_sept2020.csv",sep="") 
+
+inflacion.ec<- read.csv(inflacion)
+
+```
+
+
+## 7.2 Procesamiento de la información
+
+
+```{r}
+
+library(reshape) #Esta librería permite configurar en formato long
+
+inflacion2 <- melt(inflacion.ec, id=c("Año"))
+
+#Eliminar datos vacíos
+
+inflacion2 <- na.omit(inflacion2)
+
+# Ordenar por año
+
+inflacion2 <- inflacion2[order(inflacion2$Año),]
+
+# Cambiar de nombre las columnas
+
+colnames(inflacion2) <- c("Año","Mes","Inflacion")
+
+# Es importante que los meses estén como factor y se debe establecer el orden
+
+inflacion2$Mes<- factor(inflacion2$Mes,
+                  levels =c("Enero","Febrero",
+                            "Marzo","Abril",
+                            "Mayo","Junio",
+                            "Julio","Agosto",
+                            "Septiembre","Octubre",
+                            "Noviembre","Diciembre"))
+```
+
+
+## 7.3 Gráfico de densidad ridgelines
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+library(ggridges)
+mediana<- median(inflacion2$Inflacion, na.rm = T)
+
+ggplot(inflacion2, aes(x = Inflacion, y = Mes)) +
+  geom_density_ridges_gradient(aes(fill = ..x..), 
+                               scale = 3, size = 0.3) +
+  scale_fill_gradientn(colours = c("#154360", "#A4E1F9", "#F8FDFF", alpha=0.03),
+                       name = "Inflación anual")+
+  labs(title = 'Tasa de variación anual del índice del precio al consumidor en Ecuador',
+       subtitle= "Período enero 2000 - septiembre 2020",
+       caption = "Fuente: Índice de precios al consumidor (IPC)- Inec \n @SEYA_Ecu | @dhecheverria | @ramirovillamey",
+       x="",y="")+
+  geom_vline(xintercept = mediana, 
+                  linetype="dashed", 
+                  color = "orange", size=0.5)+
+  geom_text(aes(x= mediana+6,label=paste("Mediana: ",
+                round(mediana,2),sep="")),
+                y=14,color="orange",size=4)
+```
 
 
 
