@@ -35,9 +35,9 @@ La comunidad de usuarios que participó en este reto fue espectacular, me permit
 
 Esto hace parte fundamental de un curso de visualización de datos con R que he desarrollado bajo el enfoque de la gramática de gráficos de ggplot.
 
-El repositorio de los datos y fuentes usadas los puede encontrar en mi repositorio de Github [Reto 30 días de gráficos en R](https://github.com/davidecheverria/Reto_30_dias_de_graficos_R/tree/main/Bases_de_datos). Allí he puesto en consideración también los vínculos de las fuentes.
+El repositorio de los datos y fuentes usadas los puede encontrar en mi repositorio de Github [Reto 30 días de gráficos en R](https://github.com/davidecheverria/Reto_30_dias_de_graficos_R/tree/main/Bases_de_datos). Los vínculos de las fuentes de las bases se ha colocado en cada gráfico.
 
-Metodológicamente me parece interesante, desde mi experiencia, usar llamar a los paquetes en los procesos pertinentes y no cargarlos todos al inicio, con la finalidad de que los lectores puedan identificar su uso y funciones.
+Metodológicamente me parece interesante, desde mi experiencia, llamar a los paquetes en los procesos pertinentes y no cargarlos todos al inicio, con la finalidad de que los lectores puedan identificar su uso y funciones.
 
 # 1 Gráfico de barras: Top 20 premios nobel por país hasta el 2019
 
@@ -157,6 +157,8 @@ ultimo
 
 ## 2.2 Creación de gráfico de líneas
 
+Para la configuración de los colores se ha usado los códigos Hex. En la página [htlmcolorcodes](https://htmlcolorcodes.com/es/) se puede encontrar códigos de color Hex, RGB y HSL. Se recomienda usarla.
+
 ```{r,message=FALSE,warning=FALSE}
 library(ggplot2)
 library(ggdark)
@@ -201,7 +203,9 @@ p2+geom_point(aes(group = seq_along(Fecha)), colour="#FF8C00", size=1.5)+
 
 Para este gráfico se requirió procesar la información, lo cual permitirá observa el uso de varios paquetes. Siempre es posible optimizar los códigos pero la idea es mostrar paso a paso el procesamiento para quienes estén iniciando con R.
 
-### 3.1.1 Base de los fallecidos por COVID-19 de la [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)
+### 3.1.1 Base de los fallecidos por COVID-19 
+
+La fuente de información del COVID-19 es la [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19)
 
 ```{r,message=FALSE,warning=FALSE}
 library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
@@ -222,6 +226,8 @@ head(death.world)
 ```
 
 ### 3.1.2 Importar la base de datos del índice de desarrollo humano
+
+La fuente de información es el [PNUD](http://hdr.undp.org/en/data7)
 
 ```{r,message=FALSE,warning=FALSE}
 library(readr) 
@@ -283,7 +289,6 @@ base.covid %>%
 
 ## 3.2 Gráfico de burbujas
 
-Para la configuración de los colores se ha usado los códigos Hex. En la página [htlmcolorcodes](https://htmlcolorcodes.com/es/) se puede encontrar códigos de color Hex, RGB y HSL. Se recomienda usarla.
 
 ```{r,fig.height=10,fig.width=10}
 library(ggrepel) #Esta librería permite que las etiquetas no se traslapen
@@ -607,6 +612,77 @@ ggplot(inflacion2, aes(x = Inflacion, y = Mes)) +
                 round(mediana,2),sep="")),
                 y=14,color="orange",size=4)
 ```
+
+# 8 Gráficos de contorno: Recuperados de COVD-19 al 03/11/20 vs Índice de Desarrollo Humano 2018 
+
+## 8.1 Bases de datos
+
+La fuente de información de los datos del COVID-19 es la [Johns Hopkins University](https://github.com/CSSEGISandData/COVID-19) y la del Índice de Dsearrollo Humano es el [PNUD](http://hdr.undp.org/en/data7)
+
+
+```{r,message=FALSE,warning=FALSE}
+library(readr)
+
+#COVID
+url.covid<-paste("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/11-03-2020.csv",sep="") 
+
+covid.world<- read_csv(url.covid)
+
+#IDH  
+idh<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/idh_2018.csv",sep="")  
+idh_90_18<- read_csv(idh)
+idh_2018 <- idh_90_18[,c(2,31)]
+colnames(idh_2018) <- c("Pais","idh_2018")
+
+```
+
+## 8.2 Procesamiento de la base de datos
+
+```{r}
+#Suma por categoría
+recovery.world<- aggregate(covid.world$Recovered,by=list(Category=covid.world$Country_Region), FUN=sum)
+
+#Renombrar columnas
+colnames(recovery.world)<- c("Pais","Recuperados")
+
+#Merge
+
+idh_recuperados <- merge(idh_2018,recovery.world,by="Pais")
+```
+
+
+## 8.3 Gráfico de contorno
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+library(ggrepel)
+library(ggdark)
+
+g8 <- ggplot(idh_recuperados, aes(idh_2018, log(Recuperados)))+
+  stat_density_2d(aes(fill = ..level..), geom = "polygon", colour="white")+
+  scale_fill_viridis_c()+
+  geom_text_repel(data=subset(idh_recuperados, idh_recuperados$Recuperados >= mean(idh_recuperados$Recuperados)),
+          aes(idh_2018,log(Recuperados),label=Pais),
+              size = 4,
+              segment.size = .25,
+              segment.alpha = 1.5,
+              force = 10,
+              fontface = 'bold',
+              color="white",
+              arrow = arrow(length = unit(0.015, "npc"), 
+              type = "closed", ends = "first"))+
+  dark_mode()+
+  labs(
+       title= "Recuperados de COVD-19 al 18/05/20 vs Índice de Desarrollo Humano 2018",
+       x="Índice de desarrollo humano",y="Log (Número de recuperados de COVID-19)",
+       caption= "Fuente: PNUD | Johns Hopkins University \n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey \nNota: Se etiquetó a los países con un número de recuperados mayor al promedio")
+  
+g8 
+
+```
+
+
+
 
 
 
