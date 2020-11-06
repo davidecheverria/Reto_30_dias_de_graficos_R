@@ -653,7 +653,7 @@ idh_recuperados <- merge(idh_2018,recovery.world,by="Pais")
 
 ## 8.3 Gráfico de contorno
 
-```{r,message=FALSE,warning=FALSE}
+```{r,message=FALSE,warning=FALSE,fig.width=8}
 library(ggplot2)
 library(ggrepel)
 library(ggdark)
@@ -661,7 +661,7 @@ library(ggdark)
 g8 <- ggplot(idh_recuperados, aes(idh_2018, log(Recuperados)))+
   stat_density_2d(aes(fill = ..level..), geom = "polygon", colour="white")+
   scale_fill_viridis_c()+
-  geom_text_repel(data=subset(idh_recuperados, idh_recuperados$Recuperados >= mean(idh_recuperados$Recuperados)),
+  geom_text_repel(data=subset(idh_recuperados, idh_recuperados$Recuperados > mean(idh_recuperados$Recuperados)),
           aes(idh_2018,log(Recuperados),label=Pais),
               size = 4,
               segment.size = .25,
@@ -673,7 +673,7 @@ g8 <- ggplot(idh_recuperados, aes(idh_2018, log(Recuperados)))+
               type = "closed", ends = "first"))+
   dark_mode()+
   labs(
-       title= "Recuperados de COVD-19 al 18/05/20 vs Índice de Desarrollo Humano 2018",
+       title= "Recuperados de COVD-19 al 05/11/20 vs Índice de Desarrollo Humano 2018",
        x="Índice de desarrollo humano",y="Log (Número de recuperados de COVID-19)",
        caption= "Fuente: PNUD | Johns Hopkins University \n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey \nNota: Se etiquetó a los países con un número de recuperados mayor al promedio")
   
@@ -682,6 +682,30 @@ g8
 ```
 
 
+
+# 9 Gráfico de áreas: Exportaciones por destino 1990 - 2019
+
+## 9.1 Base de datos
+
+La fuente de la información es el [Banco Central del Ecuador](https://contenido.bce.fin.ec/documentos/Administracion/bi_menuComercioExterior.html#)
+
+```{r,message=FALSE,warning=FALSE}
+library(readr)
+
+url.export<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/ExportacionesEc_destino_millones_FOB_2019.csv",sep="") 
+
+export<- read_csv(url.export)
+library(reshape) 
+export2 <- melt(export,id="Paises")
+```
+
+## 9.2 Procesamiento de la base de datos
+
+```{r}
+library(reshape) 
+export2 <- melt(data = export)
+
+```
 
 
 
