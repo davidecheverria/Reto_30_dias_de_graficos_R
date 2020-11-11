@@ -105,14 +105,14 @@ Primera opción de animación
 
 ```{r}
 library(gganimate)
-p+transition_states(Total, wrap = FALSE) + shadow_mark()
+g+transition_states(Total, wrap = FALSE) + shadow_mark()
 ```
 
 Segunda opción de animación
 
 ```{r}
 library(gganimate)
-p + transition_states(
+g + transition_states(
   Total,
   transition_length = 5,
   state_length = 1) +
@@ -243,8 +243,8 @@ tail(idh_2018)
 ```{r}
 #Indicadores completos del Banco Mundial
 library(WDI) #Esta liberaría permite obtener la información del Banco mundial
-new_wdi_cache <- WDIcache() 
-indicadores <- new_wdi_cache$series
+#new_wdi_cache <- WDIcache() 
+#indicadores <- new_wdi_cache$series
 
 #Población y grupo de ingreso 2019
 
@@ -256,11 +256,12 @@ head(poblacion2019)
 
 ### 3.1.4 Proyección de la población mundial (The Population Division of the Department of Economic and Social Affairs, United Nations)
 
-```{r}
+```{r,message=FALSE,warning=FALSE}
 poblacion <- paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/World_population_2020.csv",sep = "")
-poblacion50_20<- read.csv(poblacion)
+poblacion50_20<- read_csv(poblacion)
 poblacion2020 <- poblacion50_20[,c(3,78)]
 colnames(poblacion2020) <- c("Country","poblacion_2020")
+poblacion2020[289,1] <- "United States"
 head(poblacion2020)
 ```
 
@@ -352,6 +353,8 @@ colnames(crecimiento2) <- c("Pais","Año","Crecimiento")
 
 #Formato del crecimiento del PIB
 crecimiento2$Crecimiento<- round(crecimiento2$Crecimiento*100,2)
+
+head(crecimiento2)
 ```
 
 ## 4.4 Gráfico de líneas con facetas
@@ -411,7 +414,6 @@ Para este tipo de gráficos es importante que la información esté en formato m
 #Matriz origen destino
 victimas2017.m <- matrix(c(victimas2017$destinantion,victimas2017$origin),nrow = 200)
 
-
 #Vector del número de víctimas
 numero.victimas <- victimas2017$X2017
 
@@ -462,6 +464,8 @@ edades2010_2020$variable <- rep(2010:2020,each=9)
 # Creación de etiquetas
 
 edades2010_2020$etiqueta <- paste0(round(edades2010_2020$value,2)*100, "%")
+
+head(edades2010_2020)
 
 ```
 
@@ -586,6 +590,8 @@ inflacion2$Mes<- factor(inflacion2$Mes,
                             "Julio","Agosto",
                             "Septiembre","Octubre",
                             "Noviembre","Diciembre"))
+
+head(inflacion2)
 ```
 
 
@@ -648,6 +654,7 @@ colnames(recovery.world)<- c("Pais","Recuperados")
 #Merge
 
 idh_recuperados <- merge(idh_2018,recovery.world,by="Pais")
+head(idh_recuperados)
 ```
 
 
@@ -695,17 +702,49 @@ library(readr)
 url.export<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/ExportacionesEc_destino_millones_FOB_2019.csv",sep="") 
 
 export<- read_csv(url.export)
-library(reshape) 
-export2 <- melt(export,id="Paises")
+
 ```
 
 ## 9.2 Procesamiento de la base de datos
 
 ```{r}
-library(reshape) 
-export2 <- melt(data = export)
+library(reshape) # Esta librería permite transformar en formato long
+export2 <- melt(data = export,id= "Paises")
 
+#Configuación de fechas
+Fecha<-rep(seq.Date(as.Date("1990-12-31"), length.out = 30, by = "years"),each=8)
+export2$variable <- Fecha
+
+# Jeraraquización de los socios comerciales y cambio de nombres por ortografía
+
+export2$Paises <- factor(export2$Paises , labels = c("Estados Unidos", "Resto de países", "Unión Europea", "Rep. Popular China", "Panamá","Chile","Perú","Colombia"),levels=c("Estados Unidos", "Resto de paises", "Union Europea", "Rep. Popular China", "Panama","Chile","Peru","Colombia"))
+
+colnames(export2) <- c("Paises","Año","Exportaciones")
+head(export2)
 ```
+
+
+## 9.3 Gráfico de áreas
+
+```{r}
+library(ggplot2)
+library(ggdark)
+ggplot(export2, aes(x=Año, y=Exportaciones, fill=Paises)) + 
+  geom_area(alpha=0.6 , size=.5, colour="white") +
+  labs(
+    title= "Exportaciones del Ecuador por destino\n-En millónes de dólares FOB-",
+    subtitle= "Período 1990-2019",
+    x="",y= "Millones de usd FOB",fill = "Países de destino",
+    caption="Fuente: Banco Central del Ecuador\nElaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey")+
+  dark_mode()
+```
+
+
+# 10 Explorar paletas de colores: Exploraciones de los temas de ggplot
+
+## 10.1 Bases de datos
+
+Las fuente de información fueron las [Encuestas Nacionales de Empleo, Desempleo  y Subempleo](https://www.ecuadorencifras.gob.ec/empleo-septiembre-2020/) del Instituto Nacional de Estadística y Censos del Ecuador.
 
 
 
