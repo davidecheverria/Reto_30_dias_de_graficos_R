@@ -210,11 +210,11 @@ La fuente de información del COVID-19 es la [Johns Hopkins University](https://
 ```{r,message=FALSE,warning=FALSE}
 library(readr) #Esta liberaría permite leer los datos desde el repositorio de Github
 
-covid<-paste("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",sep="")  
+url<-paste("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",sep="")  
 
-covid.world<- read_csv(covid)
+covid.world<- read_csv(url)
 
-death.world<- aggregate(covid.world$`10/27/20`, by=list(Category=covid.world$`Country/Region`), FUN=sum)
+death.world<- aggregate(covid.world$`11/6/20`, by=list(Category=covid.world$`Country/Region`), FUN=sum)
 
 colnames(death.world)<- c("Country","Fallecidos")
 
@@ -257,11 +257,12 @@ head(poblacion2019)
 ### 3.1.4 Proyección de la población mundial (The Population Division of the Department of Economic and Social Affairs, United Nations)
 
 ```{r,message=FALSE,warning=FALSE}
+library(readr)
 poblacion <- paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/World_population_2020.csv",sep = "")
 poblacion50_20<- read_csv(poblacion)
 poblacion2020 <- poblacion50_20[,c(3,78)]
 colnames(poblacion2020) <- c("Country","poblacion_2020")
-poblacion2020[289,1] <- "United States"
+poblacion2020$Country <- ifelse(poblacion2020$Country=="United States of America","United States",poblacion2020$Country)
 head(poblacion2020)
 ```
 
@@ -279,7 +280,7 @@ head(base.covid)
 
 Top 50 países
 
-```{r}
+```{r,message=FALSE,warning=FALSE}
 library(dplyr)
 base.covid50 <-
 base.covid %>%
@@ -309,7 +310,7 @@ g3 <- ggplot(base.covid50,aes(x=idh_2018, y= tasa2020, size = poblacion_2020,col
     title = "Top 50 países con mayor tasa de fallecidos por COVID por millón de habitantes (al 27/10/20)\n vs Índice de Desarrollo Humano (2018)",
     caption = "Fuente: UN | PNUD | Johns Hopkins University\n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey",
     x="Índice de Desarrollo Humano",y="Tasa de fallecidos por millón habitantes")+
- guides(color=guide_legend(title="Grupo de países por ingreso"))+ # Permite cambiar el nombre de las burbujas
+ guides(color=guide_legend(title="Grupo de países por ingreso"))+ # Permite cambiar el nombre de los grupos
  scale_color_manual(values = c("#F8766D", "#00BFC4", "#7CAE00"), # Colores por default de ggplot
                       labels = c("Ingreso alto",
                                  "Ingreso medio alto",
@@ -427,11 +428,12 @@ proporcion.victimas <- sapply(numero.victimas,function(x){x/sum(numero.victimas)
 ## 5.3 Diagrama de arco
 
 ```{r,message=FALSE,warning=FALSE,fig.width=15}
+library(arcdiagram)
 arcplot(victimas2017.m,sorted = T,
         col.nodes = "black",
         lwd.arcs = proporcion.victimas*100, #Ancho de línea para dibujar símbolos de nodo
         horizontal = T, #Posición del gráfico. Se sugiere que sea horizontal cuando hay muchos datos
-        col.arcs=hsv(runif(9,0.5,0.9),alpha=0.5)) #Se genera colores a través de una distribución normal
+        col.arcs=hsv(runif(9,0.5,0.9),alpha=0.9)) # Se genera colores a través de una distribución normal
 ```
 
 
@@ -565,7 +567,7 @@ inflacion.ec<- read.csv(inflacion)
 
 ```{r}
 
-library(reshape) #Esta librería permite configurar en formato long
+library(reshape2) #Esta librería permite configurar en formato long
 
 inflacion2 <- melt(inflacion.ec, id=c("Año"))
 
@@ -609,7 +611,7 @@ ggplot(inflacion2, aes(x = Inflacion, y = Mes)) +
                        name = "Inflación anual")+
   labs(title = 'Tasa de variación anual del índice del precio al consumidor en Ecuador',
        subtitle= "Período enero 2000 - septiembre 2020",
-       caption = "Fuente: Índice de precios al consumidor (IPC)- Inec \n @SEYA_Ecu | @dhecheverria | @ramirovillamey",
+       caption = "Fuente: Índice de precios al consumidor (IPC)- Inec \n Elaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey",
        x="",y="")+
   geom_vline(xintercept = mediana, 
                   linetype="dashed", 
@@ -729,6 +731,8 @@ head(export2)
 ```{r}
 library(ggplot2)
 library(ggdark)
+library(gganimate)
+library(transformr)
 ggplot(export2, aes(x=Año, y=Exportaciones, fill=Paises)) + 
   geom_area(alpha=0.6 , size=.5, colour="white") +
   labs(
@@ -736,11 +740,22 @@ ggplot(export2, aes(x=Año, y=Exportaciones, fill=Paises)) +
     subtitle= "Período 1990-2019",
     x="",y= "Millones de usd FOB",fill = "Países de destino",
     caption="Fuente: Banco Central del Ecuador\nElaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey")+
-  dark_mode()
+  dark_mode()+
+  transition_states(
+    Paises,
+    transition_length = 3,
+    state_length = 1
+  ) +
+  enter_fade() + 
+  exit_shrink() +
+  ease_aes('sine-in-out')
 ```
 
 
-# 10 Explorar paletas de colores: Exploraciones de los temas de ggplot
+
+
+
+# 10 Explorar paletas de colores: Exploraciones de los temas de ggplot, pobreza por ingesos por provincia en Ecuador, periodo 2007-2018
 
 ## 10.1 Bases de datos
 
@@ -748,4 +763,394 @@ Las fuente de información fueron las [Encuestas Nacionales de Empleo, Desempleo
 
 
 
+```{r,message=FALSE,warning=FALSE}
+library(readr)
+library(reshape2)
+url <- paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/Pobreza_ingresos_Enemdu2018.csv",sep="")
+
+pobreza <- read_csv(url,locale = readr::locale(encoding = "latin1"))
+
+
+pobreza2 <- melt(pobreza,id="Año")
+pobreza2[is.na(pobreza2)]<-0
+
+
+pobreza2$Año<-rep(factor(2007:2018),25)
+pobreza2$value <- round(pobreza2$value,2)
+
+```
+
+
+## 10.3 Graficos con distintos temas
+
+Se recomienda observar la galería de [ggthemes](https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes/)
+
+**theme dark**
+
+```{r,message=FALSE,warning=FALSE,fig.height=10,fig.width=10}
+library(ggplot2)
+
+
+g10 <- ggplot(pobreza2, aes(x=Año, group=variable)) +
+  geom_line(aes(y=value,color=variable),size=0.75)+
+  labs(
+    title="Incidencia de la Pobreza por Ingresos en Ecuador",
+    subtitle="Periodo 2007-2018",
+    y="",
+    x="",
+  caption = "Fuente: Encuesta Nacional de Empleo, Desempleo y Subempleo \nElaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey\nNota: Las Provincias de Santa Elena y Santo Domingo inician la serie desde el 2013.\nLa provincia de Galágapos inicia la serie desde el 2015 hasta el 2017.\nLos cero representan NA")+
+  facet_wrap(~variable, scales="free")+
+  geom_smooth(aes(x=Año,y=value),color="white", size=0.8,linetype="dotted")+
+  geom_point(aes(Año,value),color="black",size=0.9)+
+  theme(legend.position = "none",
+        text = element_text(size=8.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+
+g10
+```
+
+
+```{r}
+library(ggplot2)
+library(ggdark)
+g10+theme_dark()+theme(legend.position = "none",
+        text = element_text(size=8.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+
+```{r,message=FALSE,warning=FALSE,fig.height=10,fig.width=10}
+library(ggthemes)
+g10+theme_economist()+theme(legend.position = "none",
+        text = element_text(size=8.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r,message=FALSE,warning=FALSE,fig.height=10,fig.width=10}
+library(ggthemes)
+g10+theme_fivethirtyeight()+theme(legend.position = "none",
+        text = element_text(size=8.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+**Temas basados en series de tv**
+
+Se sugiere visitar la página de esta extensión [tvthemes](https://ryo-n7.github.io/tvthemes/), para elegir temas y paletas de colores inspirados en programas de tv.
+
+Si el gráfico no requiere más de cuatro colores se sugiere que consulte el paquete [rockthemes](https://johnmackintosh.com/rockthemes/) que tiene una paletas de colores basadas en álbumes de Rock.
+
+```{r,message=FALSE,warning=FALSE,fig.height=10,fig.width=10}
+library(tvthemes)
+library(ggplot2)
+library(extrafont)
+
+g10+tvthemes::theme_avatar()+
+  scale_fill_avatarTLA()+
+  theme(legend.position = "none",
+        text = element_text(size=8.5),
+        axis.text.x = element_text(angle = 90, hjust = 1))
+ 
+ 
+```
+
+
+# 11 Mapa de calor: Mediana ingreso laboral
+
+## 11.1 Base de datos
+
+Las fuente de información fueron las [Encuestas Nacionales de Empleo, Desempleo  y Subempleo](https://www.ecuadorencifras.gob.ec/empleo-septiembre-2020/) del Instituto Nacional de Estadística y Censos del Ecuador.
+
+```{r}
+url.mediana.ingreso <- paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/Ingreso_Laboral_Mediana2018.csv",sep="")
+
+mediana.ingreso <- read.csv(url.mediana.ingreso)
+```
+
+```{r}
+library(stargazer)
+stargazer(mediana.ingreso, type = "text")
+
+ingreso2 <- melt(mediana.ingreso,id="Año")
+
+ingreso2[is.na(ingreso2)]<-0
+
+ingreso2$Año2<-rep(factor(2007:2018),25)
+```
+
+## 11.3
+
+```{r}
+ggplot(ingreso2, aes(x = variable, y = Año, fill= value)) + 
+geom_tile()+dark_theme_gray()+
+theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+#scale_fill_gradient(low = "white", high = "red") + 
+labs(
+  title="Mediana de los ingresos laborales en Ecuador por provincia",
+  subtitle="Periodo: 2007-2018",
+  fill = "Mediana ingreso laboral",
+  y="",
+  x="",
+  caption = "Fuente: Encuesta Nacional de Empleo, Desempleo y Subempleo \n Elaboración: @dhecheverria | @ramirovillamey\nNota: Las provincias de Santa Elena y Santo Domingo iniciaron la serie desde el 2013.\nLa provincia de Galágapos inició la serie desde el 2015 hasta el 2017")+
+  coord_cartesian(ylim = c(2007, 2018))+
+  geom_text(aes(label = value, colour = "black"), show.legend = F)
+```
+
+
+# 12 Gráfico lollipop: Proyecciones económicas de la CEPAL (julio 2020)
+
+
+## 12.1 Bases de datos
+
+La fuente de información fue la [CEPAL (Informe especial COVID-19 N⁰ 5, julio de 2020)](https://www.cepal.org/es/comunicados/contraccion-la-actividad-economica-la-region-se-profundiza-causa-la-pandemia-caera-91)
+
+```{r}
+url.proyecciones <- paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/Cepal_proyecciones2020.csv",sep="")
+proyecciones <- read.csv(url.proyecciones)
+```
+
+
+## 12.2 Procesamiento
+
+```{r}
+proyecciones$Tipo <- ifelse(proyecciones$PIB_2020<0,"Negativo","Positivo-Nulo")
+```
+
+
+## 12.3 Gráfico lollipop
+
+```{r}
+ggplot(proyecciones, aes(x=Pais, y=PIB_2020,label = paste(PIB_2020, "%",sep=""))) +
+  geom_segment( aes(x=Pais, xend=Pais, y=0, yend=PIB_2020), color="white") +
+  geom_point( aes(color=Tipo), size=5) +
+  dark_mode() +
+  labs(
+    title="América Latina y el Caribe: proyecciones \nde crecimiento ecomómico 2020",
+    subtitle = "Proyección publicada en abril de 2020",
+    fill = "Tasa de creciemto",
+    y="Tasa variación anual del PIB (En %)",
+    x="",
+    caption = "Fuente: Cepal \n Elaboración: @dhecheverria | @ramirovillamey")+
+  coord_flip()+
+  geom_text(color = "white", size = 2.5,fontface='bold',hjust = 1.3)
+```
+
+
+## Procesamiento 
+
+# 13 Gráficos temporales: Pirámide poblacional Ecuador
+
+## 13.1 Base de datos
+
+La fuente de información son las [Estimaciones y Proyecciones de Población de la Secretaría Planifica Ecuador ](https://sni.gob.ec/proyecciones-y-estudios-demograficos)
+
+
+# 17 Sankey 
+
+
+## 17.1 Ejemplo estandar
+
+```{r}
+library(networkD3)
+nodes = data.frame("name" = 
+                     c("Node A", # Node 0
+                       "Node B", # Node 1
+                       "Node C", # Node 2
+                       "Node D"))# Node 3
+links = as.data.frame(matrix(c(
+  0, 1, 10, # Cada fila respresenta el link. El primer número
+  0, 2, 20, # representa el nodo desde el que se conecta. 
+  1, 3, 30, # el segundo número representa el nodo al que está conectado.
+  2, 3, 40),# El tercer número es el valor del flujo.
+  byrow = TRUE, ncol = 3))
+names(links) = c("source", "target", "value")
+sankeyNetwork(Links = links, Nodes = nodes,
+              Source = "source", Target = "target",
+              Value = "value", NodeID = "name",
+              fontSize= 12, nodeWidth = 30)
+```
+
+## 17.2 20 mayores flujos migratorios de los últimos 5 años del Ecuador de acuerdo al Censo de Población y Vivienda del 2010.
+
+La fuente de información son las [Matriz de migración reciente a nivel cantonal del Censo de población y vivienda, 2020 calculado por la Secretaría Planifica Ecuador ](https://sni.gob.ec/proyecciones-y-estudios-demograficos)
+
+```{r, message=FALSE, warning=FALSE}
+library(networkD3)
+
+nodes = data.frame("name" =
+                     c("Guayaquil", #nodo 0
+                       "Santo Domingo", #nodo 1
+                       "Quito", #nodo 2
+                       "Ibarra", #nodo 3
+                       "Riobamba", #nodo 4
+                       "Latacunga", #nodo 5
+                       "Ambato", #nodo 6
+                       "Duran",#nodo 7
+                       "Loja", #nodo 8
+                       "Tulcan", #nodo 9
+                       "Esmeraldas", #nodo 10
+                       "Daule", #nodo 11
+                       "Rumiñahui", #nodo 12
+                       "Samborondon",#nodo 13
+                       "Cuenca")) #nodo 14
+
+links= as.data.frame(matrix(c(
+  0,7,13563,
+  0,2,8217,
+  1,2,6814,
+  2,1,6564,
+  0,11,6503,
+  2,0,6138,
+  3,2,5498,
+  2,12,5409,
+  4,2,5195,
+  0,13,5189,
+  5,2,4558,
+  6,2,4327,
+  7,0,4315,
+  2,3,4247,
+  8,2,3411,
+  2,6,3320,
+  2,4,3195,
+  9,2,3192,
+  10,0,3060,
+  2,14,2952),
+  byrow = T, ncol = 3))
+  
+  names(links) = c("source", "target", "value")
+  sankeyNetwork(Links = links, Nodes = nodes,
+                Source = "source", Target = "target",
+                Value = "value", NodeID = "name",
+                fontSize= 12, nodeWidth = 30)
+```
+
+
+
+# 25 Gráfico de violin: Pobreza por necesidades básicas insatisfechas por provincia en Ecuador, periodo 2007-2018
+
+## 25.1 Bases de datos
+
+Las fuente de información fueron las [Encuestas Nacionales de Empleo, Desempleo  y Subempleo](https://www.ecuadorencifras.gob.ec/empleo-septiembre-2020/) del Instituto Nacional de Estadística y Censos del Ecuador.
+
+
+```{r,message=FALSE,warning=FALSE}
+library(readr)
+
+url.nbi<-paste("https://raw.githubusercontent.com/davidecheverria/Reto_30_dias_de_graficos_R/main/Bases_de_datos/Pobreza_nbi_Enemdu2018.csv",sep="") 
+
+pobreza.nbi<- read.csv(url.nbi)
+
+```
+
+
+## 25.2 Procesamiento de la base de datos
+
+
+```{r}
+#Pobreza sin los datos nacionales
+pobreza.nbi <- pobreza[,-26]
+pobreza.nbi2 <- melt(pobreza.nbi, id="Año")
+```
+
+## 25.3 Gráfico de violin 
+
+```{r,message=FALSE,warning=FALSE}
+library(ggplot2)
+library(ggstatsplot)
+ggstatsplot::ggbetweenstats(
+  data = subset(pobreza.nbi2),
+  x = Año,
+  y = value,
+  nboot = 10, #numero de boostrap sample para calcular el intervalo de confianza
+  messages = T,
+  outlier.tagging=T,
+  plot.type="boxviolin",
+  type="p"
+)+
+  labs(
+    title="Pobreza por Necesidades Básicas Insatisfechas en Ecuador",
+    subtitle="Período: 2008-2018",
+    caption= "Fuente: INEC - Encuesta Nacional de Empleo, Desempleo y Subempleo - Enemdu\nElaboración: @SEYA_Ecu | @dhecheverria | @ramirovillamey\nNota: Las provincias de Santa Elena y Santo Domingo iniciaron la serie desde el 2013.\nLa provincia de Galágapos inició la serie desde el 2015 hasta el 2017"
+      )+
+  dark_mode()+
+  theme(legend.position = "none")
+```
+
+# Bonus Gráficos adicionales
+
+## Uso de plotly bubble chart
+
+```{r,message=FALSE,warning=FALSE}
+library(plotly)
+
+colors <- c('#35D0DC', '#83EC20', '#EE2222', '#FCFF28', '#FF28B7')
+
+library(gapminder)
+gapminder2007 <- subset(gapminder,gapminder$year==2007)
+
+fig <- plot_ly(gapminder2007, x = ~gdpPercap, y = ~lifeExp, color = ~continent, size = ~pop, 
+               colors = colors,
+               type = 'scatter', mode = 'markers', sizes = c(8, 50),
+               marker = list(symbol = 'circle', sizemode = 'diameter',
+                             line = list(width = 2, color = '#FFFFFF')),
+               text = ~paste('País:',country))
+
+
+fig <- fig %>% layout(title = 'Priorización de problemas',
+                      paper_bgcolor = 'rgb(243, 243, 243)',
+                      plot_bgcolor = 'rgb(243, 243, 243)',
+                      annotations = list(x = 1, y = -0.1, 
+                                         text = "Fuente:Gapminder\nElaboración: David Echeverría", 
+                                         showarrow = F, xref='paper', yref='paper', 
+                                         xanchor='right', yanchor='auto', xshift=40, yshift=-8,
+                                         font=list(size=8, color="black"))
+ )
+fig
+```
+
+## Range Sliders and Selectors in R
+
+```{r}
+	
+library(WDI) #Esta liberaría permite obtener la información del Banco mundial
+#new_wdi_cache <- WDIcache() 
+#indicadores <- new_wdi_cache$series
+
+#Población y grupo de ingreso 2019
+
+pib.pc.real <- WDI(country=c("ECU","COL","PER"),indicator = "NY.GDP.PCAP.KD.ZG", start= 1990,end=2019,extra = TRUE) 
+
+pib.pc.real <- pib.pc.real[,c(2:4)]
+
+pib.pc.real <- spread(data = pib.pc.real,key = country,value = NY.GDP.PCAP.KD.ZG)
+
+fig <- plot_ly(pib.pc.real, x = ~year)
+fig <- fig %>% add_lines(y = ~Colombia, name = "Colombia")
+fig <- fig %>% add_lines(y = ~Ecuador, name = "Ecuador")
+fig <- fig %>% add_lines(y = ~Peru, name = "Perú")
+fig <- fig %>% layout(
+    title = "Gdp per cápita 1990-2000",
+    xaxis = list(
+      rangeselector = list(
+        buttons = list(
+          list(
+            count = 1,
+            label = "1 yr",
+            step = "year",
+            stepmode = "backward"),
+          list(
+            count = 1,
+            label = "YTD",
+            step = "year",
+            stepmode = "todate"),
+          list(step = "all"))),
+
+      rangeslider = list(type = "date")),
+    yaxis = list(title = "Pib per cápita"),
+    xaxis = list(title = "años"))
+
+fig
+
+```
 
